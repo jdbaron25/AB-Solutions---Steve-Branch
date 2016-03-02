@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ti:app xmlns:ti="http://ti.appcelerator.org">
+    <id>com.linkcorp.survey</id>
+    <name>AB Solutions</name>
+    <version>2.7.0</version>
+    <publisher>Link Computer Corporation (jschimansky)</publisher>
+    <url>http://www.linkcorp.com</url>
+    <description>Survey Application</description>
+    <copyright>2015 by Link Computer Corporation</copyright>
+    <icon>atm_128x128.png</icon>
+    <persistent-wifi>false</persistent-wifi>
+    <prerendered-icon>false</prerendered-icon>
+    <statusbar-style>default</statusbar-style>
+    <statusbar-hidden>false</statusbar-hidden>
+    <fullscreen>false</fullscreen>
+    <navbar-hidden>false</navbar-hidden>
+    <analytics>true</analytics>
+    <guid>9b0929e0-aafa-4fc1-9444-4e5f97286777</guid>
+    <property name="ti.ui.defaultunit" type="string">system</property>
+    <iphone>
+        <orientations device="iphone">
+            <orientation>Ti.UI.PORTRAIT</orientation>
+        </orientations>
+        <orientations device="ipad">
+            <orientation>Ti.UI.PORTRAIT</orientation>
+            <orientation>Ti.UI.UPSIDE_PORTRAIT</orientation>
+            <orientation>Ti.UI.LANDSCAPE_LEFT</orientation>
+            <orientation>Ti.UI.LANDSCAPE_RIGHT</orientation>
+        </orientations>
+    </iphone>
+    <android xmlns:android="http://schemas.android.com/apk/res/android">
+        <manifest>
+            <application android:debuggable="true"
+                android:icon="@drawable/appicon"
+                android:label="AB Solutions"
+                android:name="AbSolutionsApplication" android:theme="@style/Theme.MyTheme"/>
+        </manifest>
+    </android>
+    <mobileweb>
+        <precache/>
+        <splash>
+            <enabled>true</enabled>
+            <inline-css-images>true</inline-css-images>
+        </splash>
+        <theme>default</theme>
+    </mobileweb>
+    <modules/>
+    <deployment-targets>
+        <target device="windows">false</target>
+        <target device="iphone">false</target>
+        <target device="ipad">false</target>
+        <target device="android">true</target>
+        <target device="mobileweb">false</target>
+    </deployment-targets>
+    <sdk-version>5.0.2.GA</sdk-version>
+    <property name="ti.deploytype">test</property>
+    <property name="appc-app-id" type="string">555f7bfe661d10b50ef93c7c</property>
+    <property name="acs-authbase-url-development" type="string">https://secure-identity.cloud.appcelerator.com</property>
+    <property name="acs-base-url-development" type="string">https://api.cloud.appcelerator.com</property>
+    <property name="acs-oauth-secret-development" type="string">qu3gsDutR12WBpFCXw8dJCljGxIERKPt</property>
+    <property name="acs-oauth-key-development" type="string">g28SiumDy25vmmMRb2I2Cq4iNp3FYEZp</property>
+    <property name="acs-api-key-development" type="string">keuDUaIs2qbF0ugxPSB8XSUiuW77x9dU</property>
+    <property name="acs-username-development" type="string">appc_app_user_dev</property>
+    <property name="acs-password-development" type="string">mTs8h2Mqz5TYoNBImc</property>
+    <property name="acs-authbase-url-production" type="string">https://secure-identity.cloud.appcelerator.com</property>
+    <property name="acs-base-url-production" type="string">https://api.cloud.appcelerator.com</property>
+    <property name="acs-oauth-secret-production" type="string">Pu5Xi6xCDF5sA7IQznNt7wyswv1vzHg5</property>
+    <property name="acs-oauth-key-production" type="string">xPUUrGz2JOUz9EKlzsGkM7yuLpzBHGiH</property>
+    <property name="acs-api-key-production" type="string">7APdfqfZ7IkzsBCz55A1iPP7RAUi05kb</property>
+    <property name="acs-username-production" type="string">appc_app_user</property>
+    <property name="acs-password-production" type="string">YSaXzGcRLXDwkThzhl</property>
+    <property name="appc-org-id" type="string">100019352</property>
+    <property name="appc-creator-user-id" type="string">276d870f-63c1-4c81-a5e5-5f4de02710ad</property>
+</ti:app>

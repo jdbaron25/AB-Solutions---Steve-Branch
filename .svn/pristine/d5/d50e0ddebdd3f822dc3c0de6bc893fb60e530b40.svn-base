@@ -1,0 +1,63 @@
+Titanium.include('db_install.js');
+Titanium.include('auth_setup.js');
+
+// this sets the background color of the master UIView (when there are no windows/tab groups on it)
+Titanium.UI.setBackgroundColor('#fff');
+ 
+// create tab group
+// var tabGroup = Titanium.UI.createTabGroup();
+// var tabGroup3 = Titanium.UI.createTabGroup();
+//  
+Ti.App.picker = Array();
+
+// create base UI tab and root window
+//
+// var loginWin = Titanium.UI.createWindow({
+    // url:'loginWindow.js',
+    // title:'Window 1',
+    // backgroundColor: '#fff'
+// });
+// var tab1 = Titanium.UI.createTab({
+    // title:'Login and Connection',
+    // window:loginWin
+// });
+ 
+//
+// create controls tab and root window
+//
+// var win2 = Titanium.UI.createWindow({
+    // url:'window2.js',
+    // title:'AB Solutions Mobile Survey Application',
+// });
+// var tab2 = Titanium.UI.createTab({
+    // title:'Data & Survey Access',
+    // window:win2
+// });
+ 
+ 
+//
+//  add tabs
+//
+if(Ti.App.credentials.auth.loginUserID==null || Ti.App.credentials.auth.loginToken==null)
+{
+	var loginWin = Titanium.UI.createWindow({
+	    url:'loginWindow.js',
+	    title:'Window 1',
+	    backgroundColor: '#fff'
+	});
+	loginWin.open();
+	//tabGroup.addTab(tab1);	
+}
+else
+{
+	var win2 = Titanium.UI.createWindow({
+	    url:'window2.js',
+	    title:'AB Solutions Mobile Survey Application',
+	});
+	win2.open();
+	// loginWin.open();
+	//tabGroup.addTab(tab2);	
+}
+
+// open tab group
+//tabGroup.open();

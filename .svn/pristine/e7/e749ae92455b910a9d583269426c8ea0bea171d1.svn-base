@@ -1,0 +1,102 @@
+function CreateQuestion(id, questionText, textColor, fontSize, top, left) {
+	return Ti.UI.createLabel({
+		text : questionText,
+		color : textColor,
+		font : {
+			fontSize : fontSize
+		},
+		top : top,
+		left : left
+	});
+}
+
+function CreateQuestionHeading(id, questionText, textColor, fontSize, top, left) {
+	return Ti.UI.createLabel({
+		text : "-----" + questionText + "-----",
+		color : textColor,
+		font : {
+			fontSize : fontSize,
+			fontWeight : 'bold',
+		},
+		top : top,
+		left : left
+	});
+}
+
+function CreateCommentField(id, top, textColor, selectedAnswer) {
+	var textArea = Ti.UI.createTextArea({
+		height : 50,
+		width : 600,
+		top : top + 30,
+		left : 20,
+		id : "comment_" + id,
+		font : {
+			fontSize : 20,
+			fontFamily : 'Marker Felt',
+			fontWeight : 'bold'
+		},
+		color : textColor,
+		textAlign : 'left',
+		borderWidth : 2,
+		borderRadius : 5,
+	});
+	if (( typeof (selectedAnswer) != 'undefined') && selectedAnswer.rowCount > 0) {
+		console.log("Comment on this question=>" + selectedAnswer.fieldByName('comments'));
+		textArea.value = selectedAnswer.fieldByName('comments');
+	}
+
+	textArea.addEventListener('return', function(e) {
+		//textArea.value = textArea.value.replace(/\n/g, '');
+		textArea.value = textArea.value.replace(/\n/, '');
+	});
+	return textArea;
+}
+
+function CreateChoices(id, top, answers, selectedAnswer) {
+	var data = [];
+	var selectedRow = null;
+	for (var a = 0; a < answers.length; a++) {
+		if (( typeof (selectedAnswer) != 'undefined') && selectedAnswer.rowCount > 0) {
+			if (answers[a] == selectedAnswer.fieldByName('value')) {
+				selectedRow = a;
+			}
+		}
+		data[a] = Titanium.UI.createPickerRow({
+			title : answers[a],
+
+		});
+	}
+	var picker1 = Titanium.UI.createPicker({
+		id : id,
+		top : top + 20,
+		selectionIndicator : true,
+		left : '20',
+	});
+	picker1.add(data);
+	if (( typeof (selectedAnswer) != 'undefined') && selectedAnswer.rowCount > 0) {
+		picker1.setSelectedRow(0, selectedRow, false);
+		// eval("Ti.App.picker[" + selectedRow + "] = picker1.getSelectedRow(0).title");
+		Ti.App.picker[id] = answers[selectedRow];
+	}
+
+	picker1.addEventListener('change', function(e) {
+		Titanium.UI.Android.hideSoftKeyboard();
+		eval("Ti.App.picker[" + id + "] = this.getSelectedRow(0).title");
+		var conn = Titanium.Database.open('mysdb');
+		var data = conn.execute('SELECT * FROM answers WHERE value=?', this.getSelectedRow(0).title);
+		conn.close();
+	});
+	return picker1;
+}
+
+function createHeader(text, textColor, fontSize, top, left) {
+	return Ti.UI.createLabel({
+		text : text,
+		color : textColor,
+		font : {
+			fontSize : fontSize
+		},
+		top : top,
+		left : left
+	});
+}

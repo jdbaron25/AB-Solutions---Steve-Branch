@@ -1,0 +1,269 @@
+var Compression = require('ti.compression');
+var externalPath = 'file://mnt/usbdisk_1.0';
+var outputFile = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory,'backup.absbak');
+var backupFileList = new Array();
+var win = Ti.UI.currentWindow;
+
+resetBackupFile();
+Titanium.include('upload.js');
+win.backgroundColor = '#fff';
+var rowColor1 = "#cccccc";
+var rowColor2 = "#c0d6e4";
+var rowCurrentColor = rowColor1;
+
+var displayTable = Titanium.UI.createTableView({
+	editable : true,
+	moveable : false,
+	backgroundColor : '#fff',
+	separatorColor : '#000',
+	top : 160,
+	height : 'auto',
+	headerTitle : 'Surveys about to be Backed Up',
+	footerTitle : ' ',
+	allowsSelection : false
+});
+var backupButton = Titanium.UI.createButton({
+	title : 'Backup Surveys',
+	top : 65,
+	left : 30,
+	right : 30,
+	height : 60,
+	font : {
+		fontSize : 30,
+		fontWeight : 'bold',
+	},
+});
+backupButton.addEventListener('click', function() {
+	console.log("Looking for USB Mount at " + externalPath);
+	var usbMount = Ti.Filesystem.getFile(externalPath);
+	console.log("USB Device writable? " + usbMount.writable);
+
+	if(usbMount.writable)
+	{
+		backupButton.enabled = false;
+		activity.show();
+		var count = backupSurveys();
+		if(count == 0)
+		{
+			alert("No completed surveys to backup.");
+		}
+		else if(count == false)
+		{
+			alert("Could not backup surveys");
+		}
+		else
+		{
+			var zipPath = externalPath+"/abs_backups/";
+			var tmp = Ti.Filesystem.getFile(zipPath);
+			if(!tmp.exists())
+			{
+				console.log(zipPath+" does not exist. Attempting to create it now.");
+				var createDirRes = tmp.createDirectory();
+				if(!createDirRes)
+				{
+					alert("Error configuring backup directory on USB Storage.");
+					console.log(createDirRes);
+				}
+			}
+			delete tmp;
+			
+			var zipFile = zipPath+getBackupFileName()+".zip";
+			
+			console.log("creating zip");
+			var zipSuccess = Compression.zip(zipFile, backupFileList);
+	    	if(zipSuccess=='success')
+	    	{
+	    		if(Ti.Filesystem.getFile(zipFile).exists()) 
+	    		{
+					var conn = Titanium.Database.open('mysdb');
+					conn.execute("UPDATE surveyResultsComplete SET backed_up = ? WHERE backed_up != ?",1,1);
+					conn.close();
+	    			alert("There were " + count + " surveys backed up");	
+				}
+				else
+				{
+					alert("Could not create backup file.");				
+				}
+	    	}
+		}
+		activity.hide();
+		backupButton.enabled = true;
+	}
+	else
+	{
+		alert("USB drive not connected or not writable.");
+	}
+});
+
+
+var backButton = Titanium.UI.createButton({
+	title : 'Back',
+	top : 10,
+	left : 10,
+	width : 100,
+	height : 50
+});
+backButton.addEventListener('click', function() {
+	win.close();
+	var homeWin = Titanium.UI.createWindow({
+		url : 'window2.js',
+		title : 'Active Surveys'
+	});
+	homeWin.open({
+		animated : true
+	});
+});
+
+
+
+var activity = Ti.UI.createActivityIndicator({
+	color : 'blue',
+	message : ' - Backing Up Data',
+	textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
+	top :130,
+	left : 30,
+	height : 20,
+	width : "auto",
+});
+win.add(activity);
+
+function getBackupFileName()
+{
+	var d = new Date();
+	var dateVal = "" + d.getFullYear() + (d.getMonth()+1) + d.getDate();
+	console.log(dateVal);
+	return "absolutions_backup_"+Ti.App.credentials.auth.loginUserID+dateVal;
+}
+function resetBackupFile()
+{
+	//today, 00:00:00 according to this device
+	if(outputFile.exists())//create an empty file to work from.
+	{
+		var todayStart = new Date();
+		todayStart.setHours(0);
+		todayStart.setMinutes(0);
+		todayStart.setSeconds(0);
+		todayStart.setMilliseconds(0);
+		console.log(outputFile.createTimestamp()+"<=Created || Today=>"+todayStart.getTime());
+		if(outputFile.createTimestamp()<todayStart.getTime())
+		{
+			console.log("Backup file created yesterday. Goahead and purge it.");
+			outputFile.deleteFile();
+		}
+		else{console.log('Backupfile was created today.');}
+	}	
+}
+function backupSurveys()
+{
+	var conn = Titanium.Database.open('mysdb');
+	var results = conn.execute("SELECT survey_result_id FROM surveyResultsComplete where backed_up != ?", 1);
+	conn.close;
+	var surveyJSON = [];
+	var resultCount = results.rowCount;
+	
+	var backupName = getBackupFileName();
+	console.log(backupName);
+	
+	var backupFileName = backupName+".json";
+
+	while(results.isValidRow())
+	{
+		surveyJSON.push(results.field(0));
+		results.next();
+	}
+	try{
+		console.log("Checking to make sure we have an output file to write to...");
+		if(!outputFile.exists())//create an empty file to work from.
+		{
+			console.log("Output file doesnt exist...");
+			var res = outputFile.write("");
+		}
+		console.log("Output file exists? "+outputFile.exists());
+		
+		for(var i=0;i<surveyJSON.length;i++)
+		{
+			console.log("generating result JSON for "+surveyJSON[i]);
+			var json = getSurveyResults(surveyJSON[i]);
+			if(outputFile.write(json+"|",true)==false)
+			{
+				console.log("Error writing to backup file...");
+				throw new Exception("Unknown error writing to backup file.");
+			}
+			
+			console.log("About to back up images...");
+			var conn = Titanium.Database.open('mysdb');
+			var imageNames = conn.execute('SELECT * FROM imageData WHERE resID=?', surveyJSON[i]);
+			conn.close();
+			console.log("Count=>"+imageNames.rowCount);
+			if(imageNames.rowCount>0)
+			{
+				while(imageNames.isValidRow())
+				{
+					var filename = imageNames.fieldByName('filename');
+					console.log("backing up "+filename);
+					var imgFile = Titanium.Filesystem.getFile(Titanium.Filesystem.applicationDataDirectory, filename);
+					backupFileList.push(imgFile.getNativePath());
+					
+					imageNames.next();
+				}
+			}
+		}
+		console.log("Backup JSON Successful");
+	}
+	catch(e){
+		console.log(e.message);
+		console.log("Could not write "+backupFileName);
+		return false;
+	}
+	backupFileList.push(outputFile.getNativePath());
+	return resultCount;
+}
+function getSurveysToBackUpList()
+{
+	var conn = Titanium.Database.open('mysdb');
+	var data = conn.execute('SELECT * FROM surveyResultsComplete WHERE backed_up=? AND complete=?', 0, "y");
+	conn.close();
+	
+	console.log("Found" + data.rowCount + " surveys to back up");
+	while (data.isValidRow()) {
+		var conn = Titanium.Database.open('mysdb');
+		var termInfo = conn.execute('SELECT * FROM terminals WHERE id=?', data.fieldByName('terminal'));
+		conn.close();
+		var row = Ti.UI.createTableViewRow({
+			color : "#000000",
+			backgroundColor : rowCurrentColor,
+			font : {
+				fontSize : 22,
+			},
+		});
+		row.height = 'auto';
+		if (termInfo.isValidRow()) {
+			var location = termInfo.fieldByName('location');
+			var street = termInfo.fieldByName('street');
+			var city = termInfo.fieldByName('city');
+			var state = termInfo.fieldByName('state');
+			var zip = termInfo.fieldByName('zip');
+			var titleStr = data.fieldByName('serial_number') + " - " + location + " : " + street + " " + city + " " + state + " " + zip;
+			//row.rowID = data.fieldByName('survey_revision_id') + "," + resultID + "," + data.fieldByName('terminal');
+			row.title = titleStr;
+		} else {
+			row.title = data.fieldByName('serial_number') + " - Survey reset for upload";
+		}
+		
+		row.name = "R_" + data.survey_result_id;
+		row.editable = true;
+		displayTable.appendRow(row);
+		if (rowCurrentColor == rowColor1) {
+			rowCurrentColor = rowColor2;
+		} else {
+			rowCurrentColor = rowColor1;
+		}
+		data.next();
+	}
+	// return data.rowCount;
+}
+getSurveysToBackUpList();
+
+win.add(backButton);
+win.add(backupButton);
+win.add(displayTable);

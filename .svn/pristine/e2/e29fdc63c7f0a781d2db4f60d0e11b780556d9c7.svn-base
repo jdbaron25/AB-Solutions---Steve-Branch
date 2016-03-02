@@ -1,0 +1,48 @@
+//Set Globals
+Ti.App.credentials = {};
+
+Ti.App.credentials.user = {};
+Ti.App.credentials.user.firstName = null;
+Ti.App.credentials.user.lastName = null;
+Ti.App.credentials.user.email = null;
+
+//Set Auth credentials
+Ti.App.credentials.auth = {};
+Ti.App.credentials.auth.loginUserID = null;
+Ti.App.credentials.auth.loginToken = null;
+
+Ti.App.credentials.auth.conn = Titanium.Database.open('mysdb');
+var authData = Ti.App.credentials.auth.conn.execute('SELECT * FROM authData LIMIT 1');
+Ti.App.credentials.auth.conn.close();
+
+delete Ti.App.credentials.auth.conn;
+
+while(authData.isValidRow())//if we have saved auth data
+{
+	Ti.App.credentials.auth.loginUserID = authData.fieldByName('userID');
+	Ti.App.credentials.auth.loginToken = authData.fieldByName('authToken');
+	Ti.App.credentials.user.firstName = authData.fieldByName('firstName');
+	Ti.App.credentials.user.lastName = authData.fieldByName('lastName');
+	Ti.App.credentials.user.email = authData.fieldByName('email');
+	break;
+}
+delete authData;
+
+//Set URLs for API
+Ti.App.credentials.url = {};
+
+
+/* Uncomment for Staging server */
+//Ti.App.credentials.url.host = "http://atmsurvey.linkstaging.com";
+
+
+/* Uncomment for Live server */
+Ti.App.credentials.url.host = "http://atmsurvey.com";
+
+Ti.App.credentials.url.base = Ti.App.credentials.url.host + "/index.php/dataSync/";
+Ti.App.credentials.url.auth = Ti.App.credentials.url.base + "auth/";
+Ti.App.credentials.url.confirm = Ti.App.credentials.url.base + "confirm/";
+Ti.App.credentials.url.up = Ti.App.credentials.url.base + "up/";
+Ti.App.credentials.url.down = Ti.App.credentials.url.base + "down/";
+Ti.App.credentials.url.uploadImage = Ti.App.credentials.url.base + "UploadImage/";
+
